@@ -60,8 +60,6 @@ jobs:
           echo "PINECONE_ENV=${{ secrets.PINECONE_ENV }}" >> .env
           echo "PINECONE_INDEX_NAME=${{ secrets.PINECONE_INDEX_NAME }}" >> .env
 
-      - name: Debug secrets.toml
-        run: cat ~/.streamlit/secrets.toml
 
       - name: Wait for PostgreSQL
         run: |
