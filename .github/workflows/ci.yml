@@ -7,6 +7,7 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   test:
@@ -25,6 +26,26 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+
+      - name: Create secrets.toml
+        run: |
+          mkdir -p ~/.streamlit
+          echo "[openai]" > ~/.streamlit/secrets.toml
+          echo "OPENAI_API_KEY = '${{ secrets.OPENAI_API_KEY }}'" >> ~/.streamlit/secrets.toml
+
+          echo "[postgres]" >> ~/.streamlit/secrets.toml
+          echo "POSTGRES_USER = '${{ secrets.POSTGRES_USER }}'" >> ~/.streamlit/secrets.toml
+          echo "POSTGRES_PASSWORD = '${{ secrets.POSTGRES_PASSWORD }}'" >> ~/.streamlit/secrets.toml
+          echo "POSTGRES_HOST = '${{ secrets.POSTGRES_HOST }}'" >> ~/.streamlit/secrets.toml
+          echo "POSTGRES_PORT = '${{ secrets.POSTGRES_PORT }}'" >> ~/.streamlit/secrets.toml
+          echo "POSTGRES_DB = '${{ secrets.POSTGRES_DB }}'" >> ~/.streamlit/secrets.toml
+          echo "SSL_MODE = '${{ secrets.SSL_MODE }}'" >> ~/.streamlit/secrets.toml
+
+          echo "[pinecone]" >> ~/.streamlit/secrets.toml
+          echo "PINECONE_API_KEY = '${{ secrets.PINECONE_API_KEY }}'" >> ~/.streamlit/secrets.toml
+          echo "PINECONE_ENV = '${{ secrets.PINECONE_ENV }}'" >> ~/.streamlit/secrets.toml
+          echo "PINECONE_INDEX_NAME = '${{ secrets.PINECONE_INDEX_NAME }}'" >> ~/.streamlit/secrets.toml
+
 
       - name: Pytest 실행
         run: |
