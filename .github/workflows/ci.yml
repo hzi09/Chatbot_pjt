@@ -82,4 +82,5 @@ jobs:
 
       - name: Pytest 실행
         run: |
+          export PYTHONPATH=$(pwd)
           pytest --maxfail=5 --disable-warnings --tb=short
