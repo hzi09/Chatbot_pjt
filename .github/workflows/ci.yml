@@ -48,24 +48,17 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Create secrets.toml
+      - name: Create .env file
         run: |
-          mkdir -p ~/.streamlit
-          echo "[openai]" > ~/.streamlit/secrets.toml
-          echo "OPENAI_API_KEY = '${{ secrets.OPENAI_API_KEY }}'" >> ~/.streamlit/secrets.toml
-
-          echo "[postgres]" >> ~/.streamlit/secrets.toml
-          echo "POSTGRES_USER = '${{ secrets.POSTGRES_USER }}'" >> ~/.streamlit/secrets.toml
-          echo "POSTGRES_PASSWORD = '${{ secrets.POSTGRES_PASSWORD }}'" >> ~/.streamlit/secrets.toml
-          echo "POSTGRES_HOST = 'localhost'" >> ~/.streamlit/secrets.toml
-          echo "POSTGRES_PORT = '5432'" >> ~/.streamlit/secrets.toml
-          echo "POSTGRES_DB = '${{ secrets.POSTGRES_DB }}'" >> ~/.streamlit/secrets.toml
-          echo "SSL_MODE = '${{ env.SSL_MODE }}'" >> ~/.streamlit/secrets.toml
-
-          echo "[pinecone]" >> ~/.streamlit/secrets.toml
-          echo "PINECONE_API_KEY = '${{ secrets.PINECONE_API_KEY }}'" >> ~/.streamlit/secrets.toml
-          echo "PINECONE_ENV = '${{ secrets.PINECONE_ENV }}'" >> ~/.streamlit/secrets.toml
-          echo "PINECONE_INDEX_NAME = '${{ secrets.PINECONE_INDEX_NAME }}'" >> ~/.streamlit/secrets.toml
+          echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" > .env
+          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
+          echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
+          echo "POSTGRES_HOST=localhost" >> .env
+          echo "POSTGRES_PORT=5432" >> .env
+          echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
+          echo "PINECONE_API_KEY=${{ secrets.PINECONE_API_KEY }}" >> .env
+          echo "PINECONE_ENV=${{ secrets.PINECONE_ENV }}" >> .env
+          echo "PINECONE_INDEX_NAME=${{ secrets.PINECONE_INDEX_NAME }}" >> .env
 
       - name: Debug secrets.toml
         run: cat ~/.streamlit/secrets.toml
