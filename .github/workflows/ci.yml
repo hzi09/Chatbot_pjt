@@ -12,7 +12,16 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-
+    
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+        ports:
+          - 5432:5432
     steps:
       - name: 코드 체크아웃
         uses: actions/checkout@v4
@@ -36,7 +45,7 @@ jobs:
           echo "[postgres]" >> ~/.streamlit/secrets.toml
           echo "POSTGRES_USER = '${{ secrets.POSTGRES_USER }}'" >> ~/.streamlit/secrets.toml
           echo "POSTGRES_PASSWORD = '${{ secrets.POSTGRES_PASSWORD }}'" >> ~/.streamlit/secrets.toml
-          echo "POSTGRES_HOST = '${{ secrets.POSTGRES_HOST }}'" >> ~/.streamlit/secrets.toml
+          echo "POSTGRES_HOST = 'localhost'" >> ~/.streamlit/secrets.toml
           echo "POSTGRES_PORT = '${{ secrets.POSTGRES_PORT }}'" >> ~/.streamlit/secrets.toml
           echo "POSTGRES_DB = '${{ secrets.POSTGRES_DB }}'" >> ~/.streamlit/secrets.toml
           echo "SSL_MODE = '${{ secrets.SSL_MODE }}'" >> ~/.streamlit/secrets.toml
