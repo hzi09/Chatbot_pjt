@@ -29,14 +29,41 @@ def register_user(username: str, password: str) -> bool:
     if conn:
         try:
             with conn.cursor() as cur:
+                # 먼저 해당 사용자명이 있는지 확인 (is_active = TRUE인 경우만)
                 cur.execute(
-                    "INSERT INTO users (username, password) VALUES (%s, %s) RETURNING id;",
-                    (username, hashed_password),
+                    "SELECT id FROM users WHERE username = %s AND is_active = TRUE",
+                    (username,),
                 )
+                existing_user = cur.fetchone()
+
+                if existing_user:
+                    return False  # 활성화된 사용자가 이미 존재함
+
+                # is_active = FALSE인 사용자가 있다면 업데이트
+                cur.execute(
+                    "SELECT id FROM users WHERE username = %s AND is_active = FALSE",
+                    (username,),
+                )
+                inactive_user = cur.fetchone()
+
+                if inactive_user:
+                    # 기존 사용자 정보 업데이트
+                    cur.execute(
+                        "UPDATE users SET password = %s, is_active = TRUE WHERE username = %s",
+                        (hashed_password, username),
+                    )
+                else:
+                    # 새 사용자 추가
+                    cur.execute(
+                        "INSERT INTO users (username, password) VALUES (%s, %s) RETURNING id;",
+                        (username, hashed_password),
+                    )
+                
                 conn.commit()
                 return True  # 회원가입 성공
-        except psycopg2.IntegrityError:
-            return False  # 중복 아이디 오류
+        except Exception as e:
+            print(f"Error during registration: {e}")
+            return False
         finally:
             release_connection(conn)
 
