@@ -12,6 +12,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    environment: production
     
     env:
       POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
@@ -60,6 +61,24 @@ jobs:
           echo "PINECONE_ENV=${{ secrets.PINECONE_ENV }}" >> .env
           echo "PINECONE_INDEX_NAME=${{ secrets.PINECONE_INDEX_NAME }}" >> .env
 
+      - name: Create Streamlit secrets
+        run: |
+          mkdir -p ~/.streamlit
+          echo "[postgres]" > ~/.streamlit/secrets.toml
+          echo "user = \"${{ secrets.POSTGRES_USER }}\"" >> ~/.streamlit/secrets.toml
+          echo "password = \"${{ secrets.POSTGRES_PASSWORD }}\"" >> ~/.streamlit/secrets.toml
+          echo "db = \"${{ secrets.POSTGRES_DB }}\"" >> ~/.streamlit/secrets.toml
+          echo "host = \"localhost\"" >> ~/.streamlit/secrets.toml
+          echo "port = \"5432\"" >> ~/.streamlit/secrets.toml
+          echo "ssl_mode = \"${{ secrets.SSL_MODE || 'disable' }}\"" >> ~/.streamlit/secrets.toml
+          echo "" >> ~/.streamlit/secrets.toml
+          echo "[openai]" >> ~/.streamlit/secrets.toml
+          echo "api_key = \"${{ secrets.OPENAI_API_KEY }}\"" >> ~/.streamlit/secrets.toml
+          echo "" >> ~/.streamlit/secrets.toml
+          echo "[pinecone]" >> ~/.streamlit/secrets.toml
+          echo "api_key = \"${{ secrets.PINECONE_API_KEY }}\"" >> ~/.streamlit/secrets.toml
+          echo "environment = \"${{ secrets.PINECONE_ENV }}\"" >> ~/.streamlit/secrets.toml
+          echo "index_name = \"${{ secrets.PINECONE_INDEX_NAME }}\"" >> ~/.streamlit/secrets.toml
 
       - name: Wait for PostgreSQL
         run: |
