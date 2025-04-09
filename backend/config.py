@@ -1,33 +1,66 @@
+import os
 import streamlit as st
+from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_core.prompts import PromptTemplate
 # from pinecone import Pinecone, ServerlessSpec
 import pinecone
 from langchain_pinecone import PineconeVectorStore
-# Neon PostgreSQL 연결 정보
+
+# .env 파일 로드
+load_dotenv()
+
+# 데이터베이스 설정
 DB_CONFIG = {
-    "host": st.secrets['postgres']['POSTGRES_HOST'],
-    "database": st.secrets['postgres']['POSTGRES_DB'],
-    "user": st.secrets['postgres']['POSTGRES_USER'],
-    "password": st.secrets['postgres']['POSTGRES_PASSWORD'],
-    "port": st.secrets['postgres']['POSTGRES_PORT']
+    "host": os.getenv("POSTGRES_HOST", st.secrets.get('postgres', {}).get('POSTGRES_HOST')),
+    "port": os.getenv("POSTGRES_PORT", st.secrets.get('postgres', {}).get('POSTGRES_PORT')),
+    "database": os.getenv("POSTGRES_DB", st.secrets.get('postgres', {}).get('POSTGRES_DB')),
+    "user": os.getenv("POSTGRES_USER", st.secrets.get('postgres', {}).get('POSTGRES_USER')),
+    "password": os.getenv("POSTGRES_PASSWORD", st.secrets.get('postgres', {}).get('POSTGRES_PASSWORD')),
+    "sslmode": os.getenv("SSL_MODE", st.secrets.get('postgres', {}).get('SSL_MODE'))
 }
 
-PINECONE_CONFIG = {
-    "api_key": st.secrets['pinecone']['PINECONE_API_KEY'],
-    "environment": st.secrets['pinecone']['PINECONE_ENV'],
-    "index_name": st.secrets['pinecone']['PINECONE_INDEX_NAME']
-}
+# OpenAI 설정
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", st.secrets.get('openai', {}).get('OPENAI_API_KEY'))
+
+# Pinecone 설정
+PINECONE_API_KEY = os.getenv("PINECONE_API_KEY", st.secrets.get('pinecone', {}).get('PINECONE_API_KEY'))
+PINECONE_ENV = os.getenv("PINECONE_ENV", st.secrets.get('pinecone', {}).get('PINECONE_ENV'))
+PINECONE_INDEX_NAME = os.getenv("PINECONE_INDEX_NAME", st.secrets.get('pinecone', {}).get('PINECONE_INDEX_NAME'))
+
+# RAG 설정
+QUESTION_PROMPT = """
+다음 컨텍스트를 기반으로 면접 질문을 생성해주세요:
+{context}
+
+생성된 질문:
+"""
+
+EVALUATION_PROMPT = """
+다음 질문과 답변을 평가해주세요:
+질문: {question}
+답변: {answer}
+
+평가 기준:
+1. 정확성: 답변이 정확한 정보를 포함하고 있는가?
+2. 완성도: 답변이 충분히 상세하고 완성도가 높은가?
+3. 명확성: 답변이 명확하고 이해하기 쉬운가?
+
+평가 결과:
+"""
+
+# RAG 검색기 설정
+retriever = None  # 실제 구현에서 설정
 
 # openai 기본 모델 설정
 DEFAULT_MODEL = "gpt-4o-mini"
 
 # OpenAI API 클라이언트 설정
 def get_openai_client():
-    return ChatOpenAI(model= DEFAULT_MODEL, temperature=0.9, api_key=st.secrets['openai']["OPENAI_API_KEY"],max_completion_tokens=1500)
+    return ChatOpenAI(model= DEFAULT_MODEL, temperature=0.9, api_key=OPENAI_API_KEY,max_completion_tokens=1500)
 
 def get_openai_key():
-    return st.secrets['openai']["OPENAI_API_KEY"]
+    return OPENAI_API_KEY
 
 # 면접 질문 생성 프롬프트
 QUESTION_PROMPT = PromptTemplate(
@@ -57,32 +90,21 @@ EVALUATION_PROMPT = PromptTemplate(
 VECTOR_STORE_PATH = "my_vector_store"
 
 # Embedding 설정
-
 embeddings = OpenAIEmbeddings(api_key=get_openai_key())
 
-PINECONE_API_KEY = PINECONE_CONFIG["api_key"]
-PINECONE_ENV = PINECONE_CONFIG["environment"]
-INDEX_NAME = PINECONE_CONFIG["index_name"]
+PINECONE_CONFIG = {
+    "api_key": PINECONE_API_KEY,
+    "environment": PINECONE_ENV,
+    "index_name": PINECONE_INDEX_NAME
+}
 
 pc = pinecone.Pinecone(api_key=PINECONE_API_KEY)
 
-# # Now do stuff
-# if index_name not in pc.list_indexes().names():
-#     pc.create_index(
-#         name=index_name,
-#         dimension=1536,
-#         metric='cosine',
-#         spec=ServerlessSpec(
-#             cloud='aws',
-#             region='us-east-1'
-#         )
-#     )
-
 # index 객체 생성
-if INDEX_NAME not in pc.list_indexes().names():
-    raise ValueError(f"Pinecone 인덱스 '{INDEX_NAME}'가 존재하지 않습니다. 먼저 생성해 주세요.")
+if PINECONE_CONFIG["index_name"] not in pc.list_indexes().names():
+    raise ValueError(f"Pinecone 인덱스 '{PINECONE_CONFIG['index_name']}'가 존재하지 않습니다. 먼저 생성해 주세요.")
 
-index = pc.Index(INDEX_NAME)
+index = pc.Index(PINECONE_CONFIG["index_name"])
 
 # Vector Store 생성 (LangChain용)
 vectorstore = PineconeVectorStore(index, embeddings,namespace="example-namespace")
